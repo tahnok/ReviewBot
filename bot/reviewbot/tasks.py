@@ -2,7 +2,6 @@ from __future__ import absolute_import
 import json
 import logging
 import pkg_resources
-from socket import gethostname
 
 from celery.utils.log import get_task_logger
 from celery.worker.control import Panel

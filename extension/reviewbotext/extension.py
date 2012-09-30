@@ -1,13 +1,12 @@
 from django.conf import settings
 from django.contrib.auth import login
 from django.contrib.auth.models import User
+from django.contrib.sites.models import Site
 from django.http import HttpRequest
 from django.utils.importlib import import_module
-from django.contrib.sites.models import Site
-
-from djblets.siteconfig.models import SiteConfiguration
 
 from celery import Celery
+from djblets.siteconfig.models import SiteConfiguration
 from reviewboard.extensions.base import Extension
 
 from reviewbotext.handlers import SignalHandlers
@@ -18,7 +17,6 @@ from reviewbotext.resources import review_bot_review_resource, \
 
 class ReviewBotExtension(Extension):
     """An extension for communicating with Review Bot"""
-
     is_configurable = True
     has_admin_site = True
     default_settings = {
@@ -57,7 +55,7 @@ class ReviewBotExtension(Extension):
             'request': request_payload,
             'settings': review_settings,
             'session': self._login_user(self.settings['user']),
-            'url': self._rb_url()
+            'url': self._rb_url(),
         }
         tools = ReviewBotTool.objects.filter(enabled=True,
                                              run_automatically=True)
@@ -96,7 +94,7 @@ class ReviewBotExtension(Extension):
         self.celery.conf.BROKER_URL = self.settings['BROKER_URL']
         payload = {
             'session': self._login_user(self.settings['user']),
-            'url': self._rb_url()
+            'url': self._rb_url(),
         }
         self.celery.control.broadcast('update_tools_list', payload=payload)
 
