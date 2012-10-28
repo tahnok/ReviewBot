@@ -99,7 +99,7 @@ class ReviewBotExtension(Extension):
         self.celery.control.broadcast('update_tools_list', payload=payload)
 
     def _rb_url(self):
-        """Return valid url including protocol"""
+        """Returns a valid reviewbot url including http protocol."""
         protocol = SiteConfiguration.objects.get_current().get(
             "site_domain_method")
         domain = Site.objects.get_current().domain

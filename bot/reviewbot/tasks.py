@@ -114,7 +114,7 @@ def update_tools_list(panel, payload):
 
     logging.info("Done iterating Tools")
     tools = json.dumps(tools)
-    hostname = gethostname()
+    hostname = panel.hostname
 
     try:
         api_client = RBClient(
