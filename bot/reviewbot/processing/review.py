@@ -149,6 +149,11 @@ class Review(object):
             except StopIteration:
                 pass
 
+            self.diff = api_root.get_diff(values={
+                    'review_request_id': self.request_id,
+                    'diff_revision': self.diff_revision
+                }).get_patch()
+
     def publish(self):
         """Upload the review to Review Board."""
         # Truncate comments to the maximum permitted amount to avoid
