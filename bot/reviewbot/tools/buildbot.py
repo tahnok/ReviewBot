@@ -52,7 +52,7 @@ class buildbot(Tool):
             'field_type': 'django.forms.CharField',
             'default': None,
             'field_options': {
-                'label': 'username',
+                'label': 'Username',
                 'help_text': 'Username, used by both PB and SSH authentication',
                 'required': True,
             },
@@ -72,7 +72,7 @@ class buildbot(Tool):
             'field_type': 'django.forms.CharField',
             'default': None,
             'field_options': {
-                'label': 'job dir',
+                'label': 'Job directory',
                 'help_text': 'SSH Job dir: Directory chosen in buildbot config\
                  to be writeable by all allowed users',
                 'required': False,
