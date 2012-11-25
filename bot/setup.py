@@ -17,11 +17,11 @@ setup(
         ],
         'reviewbot.tools': [
             'pep8 = reviewbot.tools.pep8:pep8Tool',
-            'buildbot = reviewbot.tools.buildbot:buildbot',
+            'BuildBot = reviewbot.tools.buildbot:BuildBot',
         ],
     },
     install_requires=[
+        'buildbot>=0.8.7',
         'celery>=3.0',
         'pep8>=0.7.0',
-        'buildbot>=0.8.7'
     ],)

@@ -2,7 +2,6 @@ import json
 
 from reviewbot.processing.filesystem import cleanup_tempfiles, make_tempfile
 
-
 class File(object):
     """Represents a file in the review.
 
@@ -149,11 +148,6 @@ class Review(object):
             except StopIteration:
                 pass
 
-            self.diff = api_root.get_diff(values={
-                    'review_request_id': self.request_id,
-                    'diff_revision': self.diff_revision
-                }).get_patch()
-
     def publish(self):
         """Upload the review to Review Board."""
         # Truncate comments to the maximum permitted amount to avoid
@@ -184,3 +178,23 @@ class Review(object):
             return True
         except:
             return False
+
+    @property
+    def patch_contents(self):
+        """ Get a patch for review request."""
+        if not hasattr(self, 'patch'):
+            if not hasattr(self.api_root, 'get_diff'):
+                return None
+            self.patch = self.api_root.get_diff(
+                review_request_id=self.request_id,
+                diff_revision=self.diff_revision).get_patch().diff
+
+        return self.patch
+
+    def get_patch_file_path(self):
+        """Get the absolute path to the patch file."""
+        patch_contents = self.patch_contents
+        if patch_contents:
+            return make_tempfile(patch_contents)
+        else:
+            return None
