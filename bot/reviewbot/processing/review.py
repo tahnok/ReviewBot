@@ -2,6 +2,7 @@ import json
 
 from reviewbot.processing.filesystem import cleanup_tempfiles, make_tempfile
 
+
 class File(object):
     """Represents a file in the review.
 

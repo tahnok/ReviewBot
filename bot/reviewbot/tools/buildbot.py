@@ -6,7 +6,7 @@ from reviewbot.tools import Tool
 
 
 class BuildBot(Tool):
-    name = 'BuilBot try plugin'
+    name = 'BuildBot try plugin'
     version = '0.1'
     description = "Attempt to build given diff on your buildbot servers"
     options = [
@@ -99,27 +99,59 @@ class BuildBot(Tool):
                 'required': False,
             },
         },
+        {
+            'name': 'use_branch',
+            'field_type': 'django.forms.BooleanField',
+            'default': False,
+            'field_options': {
+                'label': 'Use Branch Field',
+                'help_text': 'Tell BuildBot to use the contents of the branch '
+                'field in the review request. WARNING: this field is free form',
+                'required': False,
+            },
+
+        },
+        {
+            'name': 'default_branch',
+            'field_type': 'django.forms.CharField',
+            'field_options': {
+                'label': 'Default Branch',
+                'help_text': 'Default branch to build off of. Uses master by '
+                'default.',
+                'required': False,
+            },
+        },
     ]
 
     def execute(self):
+
+        cmd = ['buildbot',
+               'try',
+               '--wait',
+               '--diff=%s' % self.review.get_patch_file_path(),
+               '--patchlevel=1',
+               ]
+
+        branch = self.review.api_root.get_review_request(
+            review_request_id=self.review.request_id).branch
+
+        if branch != '' and self.settings['use_branch']:
+            cmd.extend(['--branch=%s' % branch])
+        elif 'default_branch' in self.settings:
+            cmd.extend(['--branch=%s' % self.settings['default_branch']])
+
         if self.settings['connect_method'] == 'PB':
-            output = execute(
-                [
-                    'buildbot',
-                    'try',
-                    '--wait',
-                    '--connect=pb',
-                    '--username=%s' % self.settings['username'],
-                    '--master=%s:%s' % (self.settings['address'],
-                                        self.settings['port']
-                                        ),
-                    '--passwd=%s' % self.settings['password'],
-                    '--diff=%s' % self.review.get_patch_file_path(),
-                    '--patchlevel=1',
-                ],
-                ignore_errors=True)
+            cmd.extend(['--connect=pb',
+                        '--username=%s' % self.settings['username'],
+                        '--master=%s:%s' % (self.settings['address'],
+                                            self.settings['port']
+                                            ),
+                        '--passwd=%s' % self.settings['password'],
+                        ])
         else:
             #TODO SSH
             print("yeah...")
+
+        output = execute(cmd, ignore_errors=True)
 
         self.review.body_top = "Buildbot Result:\n%s" % output
