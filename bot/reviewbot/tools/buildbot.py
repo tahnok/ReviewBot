@@ -1,8 +1,8 @@
 import os
 
 from reviewbot.processing.filesystem import make_tempfile
-from reviewbot.tools.process import execute
 from reviewbot.tools import Tool
+from reviewbot.tools.process import execute
 
 
 class BuildBot(Tool):
@@ -120,23 +120,35 @@ class BuildBot(Tool):
                 'required': False,
             },
         },
+        {
+            'name': 'builder',
+            'field_type': 'django.forms.CharField',
+            'field_options': {
+                'label': 'Builder',
+                'help_text': 'Comma seperated list of builders to use. Required'
+                'when using SSH',
+                'required': False,
+            },
+        },
     ]
 
     def execute(self):
         settings = self.settings
-        cmd = ['buildbot',
-               'try',
-               '--wait',
-               '--diff=%s' % self.review.get_patch_file_path(),
-               '--patchlevel=1',
-               '--username=%s' % settings['username'],
-               '--master=%s:%s' % (settings['address'],
-                                   settings['port']
-                                   ),
-               ]
+        cmd = [
+            'buildbot',
+            'try',
+            '--wait',
+            '--diff=%s' % self.review.get_patch_file_path(),
+            '--patchlevel=1',
+            '--username=%s' % settings['username'],
+            '--master=%s:%s' % (settings['address'],
+                                settings['port']
+                                ),
+        ]
 
         branch = self.review.api_root.get_review_request(
-            review_request_id=self.review.request_id).branch
+            review_request_id=self.review.request_id
+        ).branch
 
         if branch != '' and settings['use_branch']:
             cmd.append('--branch=%s' % branch)
@@ -144,15 +156,20 @@ class BuildBot(Tool):
             cmd.append('--branch=%s' % settings['default_branch'])
 
         if settings['connect_method'] == 'PB':
-            cmd.extend(['--connect=pb',
-                        '--passwd=%s' % settings['password'],
-                        ])
+            cmd.extend([
+                '--connect=pb',
+                '--passwd=%s' % settings['password'],
+            ])
         else:
-            cmd.extend(['--connect=ssh',
-                        '--jobdir=%s' % settings['jobdir'],
-                        '--builder=%s' % 'runtests',
-                        '--host=%s' % settings['address'],
-                        ])
+            #Assume SSH
+            cmd.extend([
+                '--connect=ssh',
+                '--jobdir=%s' % settings['jobdir'],
+                '--host=%s' % settings['address'],
+            ])
+
+            for builder in settings['builders'].split(','):
+                cmd.append('--builder=%s' % builder.strip())
 
             if settings['buildbotbin'] != '':
                 cmd.append('--buildbotbin=%s' % settings['buildbotbin'])

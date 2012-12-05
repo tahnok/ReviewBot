@@ -16,8 +16,8 @@ setup(
             'reviewbot = reviewbot.celery:main'
         ],
         'reviewbot.tools': [
-            'pep8 = reviewbot.tools.pep8:pep8Tool',
             'BuildBot = reviewbot.tools.buildbot:BuildBot',
+            'pep8 = reviewbot.tools.pep8:pep8Tool',
         ],
     },
     install_requires=[
