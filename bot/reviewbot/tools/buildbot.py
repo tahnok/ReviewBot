@@ -8,7 +8,7 @@ from reviewbot.tools import Tool
 class BuildBot(Tool):
     name = 'BuildBot try plugin'
     version = '0.1'
-    description = "Attempt to build given diff on your buildbot servers"
+    description = "Runs buildbot's try command and posts the result of the build"
     options = [
         {
             'name': 'address',
@@ -39,10 +39,9 @@ class BuildBot(Tool):
             'default': None,
             'field_options': {
                 'label': 'Port',
-                'help_text': 'Connection port. If using PB, enter the port the '
-                'try scheduler is listening on. If using SSH, enter the port of'
-                ' the SSH server (usually 22)',
-                'required': True,
+                'help_text': 'Port used to communicate with buildbot. Not the '
+                'the ssh connection port',
+                'required': False,
             },
         },
         {
@@ -124,34 +123,40 @@ class BuildBot(Tool):
     ]
 
     def execute(self):
-
+        settings = self.settings
         cmd = ['buildbot',
                'try',
                '--wait',
                '--diff=%s' % self.review.get_patch_file_path(),
                '--patchlevel=1',
+               '--username=%s' % settings['username'],
+               '--master=%s:%s' % (settings['address'],
+                                   settings['port']
+                                   ),
                ]
 
         branch = self.review.api_root.get_review_request(
             review_request_id=self.review.request_id).branch
 
-        if branch != '' and self.settings['use_branch']:
-            cmd.extend(['--branch=%s' % branch])
-        elif 'default_branch' in self.settings:
-            cmd.extend(['--branch=%s' % self.settings['default_branch']])
+        if branch != '' and settings['use_branch']:
+            cmd.append('--branch=%s' % branch)
+        elif 'default_branch' in settings:
+            cmd.append('--branch=%s' % settings['default_branch'])
 
-        if self.settings['connect_method'] == 'PB':
+        if settings['connect_method'] == 'PB':
             cmd.extend(['--connect=pb',
-                        '--username=%s' % self.settings['username'],
-                        '--master=%s:%s' % (self.settings['address'],
-                                            self.settings['port']
-                                            ),
-                        '--passwd=%s' % self.settings['password'],
+                        '--passwd=%s' % settings['password'],
                         ])
         else:
-            #TODO SSH
-            print("yeah...")
+            cmd.extend(['--connect=ssh',
+                        '--jobdir=%s' % settings['jobdir'],
+                        '--builder=%s' % 'runtests',
+                        '--host=%s' % settings['address'],
+                        ])
+
+            if settings['buildbotbin'] != '':
+                cmd.append('--buildbotbin=%s' % settings['buildbotbin'])
 
         output = execute(cmd, ignore_errors=True)
 
-        self.review.body_top = "Buildbot Result:\n%s" % output
+        self.review.body_top = "Buildbot Output:\n%s" % output
